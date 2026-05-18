@@ -1,0 +1,34 @@
+@import "tailwindcss";
+
+/* ── Nextwork brand tokens ──────────────────────────────────────────── */
+@theme {
+  /* Typography */
+  --font-sans: var(--font-inter);       /* Suisse Neue substitute */
+  --font-display: var(--font-dm-sans);  /* FK Grotesk Neue substitute */
+
+  /* Core palette */
+  --color-leather:    #1B1918;
+  --color-paper:      #F8F5F0;
+  --color-nw-black:   #000000;
+  --color-nw-white:   #FFFFFF;
+
+  /* Accent colours */
+  --color-sand:        #E5DCC7;
+  --color-plum:        #965ECD;
+  --color-cornflower:  #308DED;
+  --color-canary:      #FEDD2D;
+  --color-pumpkin:     #FA8A45;
+  --color-emerald:     #12CCA6;
+}
+
+/* ── Base ───────────────────────────────────────────────────────────── */
+:root {
+  --background: var(--color-paper);
+  --foreground: var(--color-leather);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans), Arial, sans-serif;
+}
