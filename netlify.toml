@@ -1,0 +1,7 @@
+[build]
+  base = "nextwork-app"
+  command = "npm run build"
+  publish = "nextwork-app/.next"
+
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
