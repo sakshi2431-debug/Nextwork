@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react'
 import { Instrument_Serif, DM_Sans } from 'next/font/google'
 import {
   Palette, Sun, Moon, Sparkles, Share2, Check,
-  ArrowRight, Zap, Link2,
+  ArrowRight, Zap, Link2, LayoutGrid,
 } from 'lucide-react'
 import styles from './page.module.css'
 
@@ -218,7 +218,7 @@ const TOC_IDS = ['s0', 's1', 's2', 's3', 's4', 's5', 's6', 's7']
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 export default function ProjectPage() {
-  const [theme, setTheme] = useState<'light' | 'dark' | 'fun'>('light')
+  const [theme, setTheme] = useState<'light' | 'dark' | 'fun' | 'bento'>('light')
   const [themeOpen, setThemeOpen] = useState(false)
   const [activeSection, setActiveSection] = useState(0)
   const themeWrapRef = useRef<HTMLDivElement>(null)
@@ -258,7 +258,7 @@ export default function ProjectPage() {
     return () => observer.disconnect()
   }, [])
 
-  const themeClass = theme === 'dark' ? styles['theme-dark'] : theme === 'fun' ? styles['theme-fun'] : ''
+  const themeClass = theme === 'dark' ? styles['theme-dark'] : theme === 'fun' ? styles['theme-fun'] : theme === 'bento' ? styles['theme-bento'] : ''
 
   return (
     <div className={cx(styles.root, serif.variable, dmSans.variable, themeClass)}>
@@ -404,6 +404,7 @@ export default function ProjectPage() {
                   { key: 'light', label: 'Light theme', Icon: Sun },
                   { key: 'dark',  label: 'Dark theme',  Icon: Moon },
                   { key: 'fun',   label: 'Fun theme',   Icon: Sparkles },
+                  { key: 'bento', label: 'Bento theme', Icon: LayoutGrid },
                 ] as const).map(({ key, label, Icon }) => (
                   <button
                     key={key}
