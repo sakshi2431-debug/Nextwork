@@ -902,3 +902,313 @@
   --dp-nav-logo-color: #F7F3EC;
   --dp-nav-fade:      #F7F3EC;
 }
+
+/* ═══════════════════════════════════════════════════════════════
+   BENTO GRID LAYOUT
+═══════════════════════════════════════════════════════════════ */
+
+.bento-page {
+  max-width: 1320px;
+  margin: 0 auto;
+  padding: 20px 20px calc(var(--nav-h) + 28px);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* ── Stats row ── */
+.stats-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+}
+.stat-tile {
+  border-radius: 18px;
+  padding: 36px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  text-align: center;
+}
+.st-l {
+  background: #FFFFFF;
+  border: 1px solid var(--border);
+}
+.st-d {
+  background: var(--leather);
+}
+.st-num {
+  font-family: var(--serif);
+  font-size: clamp(40px, 4.5vw, 64px);
+  font-weight: 700;
+  line-height: 1;
+}
+.st-l .st-num { color: var(--leather); }
+.st-d .st-num { color: #FFFFFF; }
+.st-lbl {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+.st-l .st-lbl { color: var(--text-3); }
+.st-d .st-lbl { color: rgba(255,255,255,0.4); }
+
+/* ── Bento grid ── */
+.bento-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+/* ── Base card ── */
+.bc {
+  border-radius: 20px;
+  padding: 32px 36px 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-height: 460px;
+}
+.bc-l {
+  background: #FFFFFF;
+  border: 1px solid var(--border);
+  --bc-num:      var(--pumpkin);
+  --bc-cnt:      var(--text-3);
+  --bc-title:    var(--leather);
+  --bc-desc:     var(--text-2);
+  --bc-tag-bg:   rgba(27,25,24,0.04);
+  --bc-tag-bd:   var(--border);
+  --bc-tag-clr:  var(--text-2);
+}
+.bc-d {
+  background: var(--leather);
+  --bc-num:      var(--pumpkin);
+  --bc-cnt:      rgba(255,255,255,0.28);
+  --bc-title:    #FFFFFF;
+  --bc-desc:     rgba(255,255,255,0.55);
+  --bc-tag-bg:   rgba(255,255,255,0.06);
+  --bc-tag-bd:   rgba(255,255,255,0.12);
+  --bc-tag-clr:  rgba(255,255,255,0.55);
+}
+
+.bc-hd {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.bc-n {
+  font-family: var(--mono);
+  font-size: 12px;
+  letter-spacing: 0.02em;
+  color: var(--bc-num);
+}
+.bc-cnt {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  color: var(--bc-cnt);
+}
+.bc-title {
+  font-family: var(--serif);
+  font-size: clamp(20px, 2.3vw, 30px);
+  font-weight: 700;
+  line-height: 1.18;
+  letter-spacing: -0.01em;
+  color: var(--bc-title);
+  white-space: pre-line;
+}
+.bc-title em { font-style: italic; font-weight: 400; }
+.bc-desc {
+  font-size: 14px;
+  line-height: 1.65;
+  color: var(--bc-desc);
+}
+
+/* ── UI mockup (card 01) ── */
+.bc-mock {
+  flex: 1;
+  background: #F8F5F0;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 22px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.bm-lbl {
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.13em;
+  color: var(--text-3);
+  text-transform: uppercase;
+}
+.bm-tag {
+  font-family: var(--serif);
+  font-size: 18px;
+  color: var(--leather);
+  line-height: 1.35;
+}
+.bm-cta {
+  font-family: var(--sans);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--leather);
+  letter-spacing: 0.03em;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  margin-top: auto;
+}
+
+/* ── Checklist (card 02) ── */
+.bc-list {
+  flex: 1;
+  list-style: none;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.bc-list li {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 14px;
+  color: rgba(255,255,255,0.82);
+  line-height: 1.45;
+}
+.bc-list li::before {
+  content: '✓';
+  color: var(--emerald);
+  font-size: 13px;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+/* ── Terminal block (card 03) ── */
+.bc-term {
+  flex: 1;
+  background: var(--leather);
+  border-radius: 14px;
+  padding: 16px 18px;
+  position: relative;
+  overflow: hidden;
+}
+.bt-dots {
+  display: flex;
+  gap: 5px;
+  margin-bottom: 12px;
+}
+.bt-dots span {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+.bt-dots span:nth-child(1) { background: #FF5F57; }
+.bt-dots span:nth-child(2) { background: #FEBC2E; }
+.bt-dots span:nth-child(3) { background: #28C840; }
+.bt-ok {
+  position: absolute;
+  top: 18px;
+  right: 16px;
+  font-family: var(--mono);
+  font-size: 9px;
+  color: var(--emerald);
+  letter-spacing: 0.06em;
+}
+.bt-code {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: rgba(255,255,255,0.72);
+  line-height: 1.82;
+  white-space: pre;
+  margin: 0;
+}
+
+/* ── File tree (card 04) ── */
+.bc-tree {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  padding: 16px 18px;
+  background: rgba(255,255,255,0.05);
+  border-radius: 14px;
+  border: 1px solid rgba(255,255,255,0.08);
+}
+.btr-r {
+  font-family: var(--mono);
+  font-size: 12.5px;
+  color: rgba(255,255,255,0.78);
+  line-height: 1.85;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.btr-a { color: rgba(255,255,255,0.32); font-size: 10px; }
+.btr-i1 { padding-left: 14px; }
+.btr-i2 { padding-left: 28px; }
+.btr-m  { color: rgba(255,255,255,0.3); }
+
+/* ── Prompt mock (card 05) ── */
+.bc-prompt {
+  flex: 1;
+  background: rgba(27,25,24,0.04);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 18px 20px;
+}
+.bpr-lbl {
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  color: var(--text-3);
+  text-transform: uppercase;
+  margin-bottom: 10px;
+}
+.bpr-txt {
+  font-size: 13px;
+  color: var(--text-2);
+  line-height: 1.65;
+  font-style: italic;
+}
+
+/* ── Spacer (cards with no visual) ── */
+.bc-spacer { flex: 1; }
+
+/* ── Tags ── */
+.bc-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding-top: 4px;
+}
+.bc-tag {
+  font-family: var(--mono);
+  font-size: 9.5px;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  padding: 4px 11px;
+  border-radius: 100px;
+  background: var(--bc-tag-bg);
+  border: 1px solid var(--bc-tag-bd);
+  color: var(--bc-tag-clr);
+}
+
+/* ── Bento bottom nav (no sidebar column) ── */
+.bn-inner-b {
+  height: 100%;
+  max-width: 1320px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px;
+}
+
+@media (max-width: 860px) {
+  .bento-grid { grid-template-columns: 1fr; }
+  .stats-row  { grid-template-columns: repeat(2, 1fr); }
+}
