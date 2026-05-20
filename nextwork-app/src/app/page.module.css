@@ -579,34 +579,65 @@
   --ink:         #1C1714;
   --ink-2:       #4A3F35;
   --ink-3:       #8B7B6E;
-  --surface:     #FAFAF7;
-  --surface-2:   #F2EDE4;
-  --surface-3:   #E0D9CD;
+  --surface:     #F7F3EC;
+  --surface-2:   #EFE8DC;
+  --surface-3:   #DDD4C4;
   --accent:      #B5541A;
   --accent-2:    #CC6B2A;
   --accent-soft: #FBE8DC;
   --green:       #4A7C59;
 }
+
+/* topnav: frosted sky glass */
 .theme-bento .topnav {
-  background: rgba(250,250,247,0.92);
-  border-bottom-color: var(--surface-3);
+  background: rgba(196,218,230,0.55);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom-color: rgba(255,255,255,0.35);
 }
+
+/* hero: the cloud image fades down into the warm earth */
 .theme-bento .hero-bg {
   background:
-    radial-gradient(ellipse 60% 50% at 30% 40%, rgba(181,84,26,0.10) 0%, transparent 60%),
-    radial-gradient(ellipse 40% 40% at 70% 60%, rgba(204,107,42,0.07) 0%, transparent 60%);
+    linear-gradient(
+      to bottom,
+      rgba(247,243,236,0.08) 0%,
+      rgba(247,243,236,0.30) 55%,
+      rgba(247,243,236,0.92) 82%,
+      rgba(247,243,236,1.00) 100%
+    ),
+    url('/bento-sky.jpg') center 25% / cover no-repeat;
 }
+
+/* hero eyebrow: airy glass pill over the sky */
+.theme-bento .hero-eyebrow {
+  background: rgba(255,255,255,0.55);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border-color: rgba(255,255,255,0.7);
+}
+
+/* hero title italic: warm terracotta anchors sky to earth */
 .theme-bento .hero-h1 em {
   font-style: italic;
   background: linear-gradient(90deg, #B5541A, #CC6B2A);
   -webkit-background-clip: text; -webkit-text-fill-color: transparent;
   background-clip: text;
 }
+
+/* hero avatar: earthy sand instead of purple */
+.theme-bento .hero-avatar {
+  background: linear-gradient(135deg, #D4A574, #B5541A);
+}
+
+/* stat numbers: terracotta gradient */
 .theme-bento .stat-num {
   background: linear-gradient(135deg, #B5541A, #CC6B2A);
   -webkit-background-clip: text; -webkit-text-fill-color: transparent;
   background-clip: text;
 }
+
+/* cards & content: warm parchment surfaces */
 .theme-bento .cs-left,
 .theme-bento .stat-card,
 .theme-bento .full-card,
@@ -619,16 +650,19 @@
   background: var(--surface-2);
   border-color: var(--surface-3);
 }
-.theme-bento .cs-right { background: var(--surface); border-color: var(--surface-3); }
-.theme-bento .caz-item { background: var(--surface); }
+.theme-bento .cs-right   { background: var(--surface);  border-color: var(--surface-3); }
+.theme-bento .caz-item   { background: var(--surface); }
 .theme-bento .card-prompt { background: #FEF3EC; border-color: #F5C8A8; }
-.theme-bento .btn-ghost { background: var(--surface-2); border-color: var(--surface-3); color: var(--ink-2); }
-.theme-bento .bn-pill { background: rgba(250,250,247,0.96); border-color: var(--surface-3); }
-.theme-bento .theme-up { background: var(--surface-2); border-color: var(--surface-3); }
+.theme-bento .btn-ghost  { background: var(--surface-2); border-color: var(--surface-3); color: var(--ink-2); }
+.theme-bento .bn-pill    { background: rgba(247,243,236,0.96); border-color: var(--surface-3); }
+.theme-bento .theme-up   { background: var(--surface-2); border-color: var(--surface-3); }
 .theme-bento .cgen-select { background: var(--surface); border-color: var(--surface-3); color: var(--ink-2); }
-.theme-bento .cs-tag { background: var(--surface); border-color: var(--surface-3); }
-.theme-bento .footer-cta { background: #2C1A0E; }
-.theme-bento .fcta-bg { background: radial-gradient(ellipse 50% 80% at 50% 0%, rgba(181,84,26,0.45) 0%, transparent 70%); }
+.theme-bento .cs-tag     { background: var(--surface); border-color: var(--surface-3); }
+.theme-bento .toc-dot    { background: var(--surface-3); }
+
+/* footer: deep dusk — where the earth meets the sky after dark */
+.theme-bento .footer-cta { background: linear-gradient(160deg, #2A3A42, #1C2A1A); }
+.theme-bento .fcta-bg    { background: radial-gradient(ellipse 50% 80% at 50% 0%, rgba(150,185,200,0.35) 0%, transparent 70%); }
 
 /* ── Responsive ─────────────────────────────────────────────────────────────── */
 @media (max-width: 768px) {
