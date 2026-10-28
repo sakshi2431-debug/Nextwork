@@ -1,6 +1,10 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
+import Image from 'next/image'
+import { CheckItem } from '../components/CheckItem'
+import { CodeBlock } from '../components/CodeBlock'
+import type { SpeechRecognitionHandle, SpeechRecognitionWindow } from '../lib/speech'
 import { Libre_Baskerville, DM_Mono } from 'next/font/google'
 import styles from './page.module.css'
 
@@ -79,7 +83,7 @@ const SECTION_PROGRESS: Record<string, number> = {
   'secret': 72, 'cleanup': 88, 'mission': 100,
 }
 
-function TopBar({ progress, onDoc }: { progress: number; onDoc: () => void }) {
+function TopBar({ progress }: { progress: number }) {
   return (
     <div className={s('top-bar')}>
       <div className={s('top-bar-inner')}>
@@ -140,7 +144,7 @@ function UploadZone({ imageKey, uploadedImages, onUpload }: {
   return img ? (
     <div className={cx(s('up-row'), s('show'))} role="status" aria-live="polite">
       <div className={s('up-thumb')} aria-hidden="true">
-        <img src={img.url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 4 }} />
+        <Image src={img.url} alt="" width={48} height={48} unoptimized style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 4 }} />
       </div>
       <div className={s('up-name')}>{img.name}</div>
       <div className={s('up-ok')}>
@@ -410,20 +414,20 @@ export default function ProjectPage() {
   // Voice recording state: which textarea id is currently recording / processing
   const [recording, setRecording] = useState<string | null>(null)
   const [processing, setProcessing] = useState<string | null>(null)
-  const recognitionRef = useRef<any>(null)
+  const [voiceError, setVoiceError] = useState('')
+  const recognitionRef = useRef<SpeechRecognitionHandle | null>(null)
+
+  useEffect(() => () => recognitionRef.current?.abort(), [])
 
   // Reflection save state and work panel
   const [saved, setSaved] = useState<Record<string, boolean>>({})
   const [doLater, setDoLater] = useState<Record<string, boolean>>({})
   const [workPanelOpen, setWorkPanelOpen] = useState(false)
-  const [theme, setTheme] = useState<'light' | 'dark' | 'fun'>('light')
-  const [themeOpen, setThemeOpen] = useState(false)
   const [docOpen, setDocOpen] = useState(false)
   const [docExpanded, setDocExpanded] = useState(false)
   const [docTheme, setDocTheme] = useState<'light' | 'dark' | 'fun' | 'bento'>('dark')
   const [docThemeOpen, setDocThemeOpen] = useState(false)
   const docThemeRef = useRef<HTMLDivElement>(null)
-  const [actExpanded, setActExpanded] = useState<Record<string, boolean>>({})
 
   // Smooth scroll + sidebar intersection observer
   useEffect(() => {
@@ -484,7 +488,7 @@ export default function ProjectPage() {
     }
 
     const SR = (typeof window !== 'undefined') &&
-      ((window as any).SpeechRecognition || (window as any).webkitSpeechRecognition)
+      ((window as SpeechRecognitionWindow).SpeechRecognition || (window as SpeechRecognitionWindow).webkitSpeechRecognition)
     if (!SR) {
       alert('Voice input requires Chrome or Edge.')
       return
@@ -495,7 +499,8 @@ export default function ProjectPage() {
     rec.interimResults = false
     rec.maxAlternatives = 1
 
-    rec.onresult = async (event: any) => {
+    setVoiceError('')
+    rec.onresult = async event => {
       const transcript: string = event.results[0][0].transcript
       setRecording(null)
       setProcessing(id)
@@ -504,185 +509,35 @@ export default function ProjectPage() {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ transcript }),
+          signal: AbortSignal.timeout(30000),
         })
-        const data = await res.json()
-        setReflections(prev => ({ ...prev, [id]: data.text ?? transcript }))
+        if (!res.ok) throw new Error('Rewrite unavailable')
+        const data: unknown = await res.json()
+        if (!data || typeof data !== 'object' || !('text' in data) || typeof data.text !== 'string' || !data.text.trim()) throw new Error('Invalid rewrite')
+        const text = data.text
+        setReflections(prev => ({ ...prev, [id]: text }))
       } catch {
         setReflections(prev => ({ ...prev, [id]: transcript }))
+        setVoiceError('The rewrite did not finish. Your original transcript has been kept; you can edit it here.')
       } finally {
         setProcessing(null)
       }
     }
 
-    rec.onerror = () => setRecording(null)
+    rec.onerror = () => { setRecording(null); setVoiceError('Voice input stopped. You can type your reflection instead.') }
     rec.onend = () => setRecording(null)
 
     recognitionRef.current = rec
-    rec.start()
-    setRecording(id)
-  }
-
-  // Reusable checkbox item
-  function CheckItem({ id, children }: { id: string; children: React.ReactNode }) {
-    const checked = checks[id] ?? false
-    return (
-      <div
-        className={cx(s('cl-item'), checked && s('done'))}
-        role="checkbox"
-        aria-checked={checked}
-        tabIndex={0}
-        onClick={() => toggleCheck(id)}
-        onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleCheck(id) } }}
-      >
-        <div className={cx(s('cl-box'), checked && s('on'))}>
-          {checked && <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>}
-        </div>
-        {children}
-      </div>
-    )
-  }
-
-  // Reusable code block
-  function CodeBlock({
-    lang, file, copyKey, copyText, html,
-    showExpand = true, showNewTab = false,
-    explanation, showHint = false,
-    lineAnnotations,
-  }: {
-    lang?: string; file?: string; copyKey: string; copyText: string; html: string;
-    showExpand?: boolean; showNewTab?: boolean;
-    explanation?: React.ReactNode; showHint?: boolean;
-    lineAnnotations?: string[];
-  }) {
-    const [explOpen, setExplOpen] = useState(false)
-    const [selLine, setSelLine] = useState<number | null>(null)
-    const blockRef = useRef<HTMLDivElement>(null)
-
-    const lines = lineAnnotations ? html.split('\n') : null
-    const panelOpen = selLine !== null
-    const annotText = selLine !== null && lineAnnotations ? lineAnnotations[selLine] : ''
-
-    useEffect(() => {
-      if (selLine === null) return
-      function onDown(e: MouseEvent) {
-        if (blockRef.current && !blockRef.current.contains(e.target as Node)) {
-          setSelLine(null)
-        }
-      }
-      document.addEventListener('mousedown', onDown)
-      return () => document.removeEventListener('mousedown', onDown)
-    }, [selLine])
-
-    function onContainerKey(e: React.KeyboardEvent) {
-      if (!lines) return
-      if (e.key === 'Escape') { setSelLine(null); return }
-      if (selLine === null) return
-      if (e.key === 'ArrowDown') { e.preventDefault(); setSelLine(p => Math.min((p ?? 0) + 1, lines.length - 1)) }
-      if (e.key === 'ArrowUp')   { e.preventDefault(); setSelLine(p => Math.max((p ?? 0) - 1, 0)) }
-    }
-
-    return (
-      <div className={s('code')} role="region" ref={blockRef} onKeyDown={onContainerKey}>
-        <div className={s('code-hd')}>
-          <div className={s('code-hd-l')}>
-            {file && <span className={s('code-file')}>{file}</span>}
-            {lang && <span className={s('code-lang')}>{lang}</span>}
-          </div>
-          <div className={s('code-acts')}>
-            {explanation && (
-              <button
-                className={cx(s('code-btn'), s('code-expl-toggle'))}
-                onClick={() => setExplOpen(p => !p)}
-                aria-expanded={explOpen}
-                type="button"
-              >
-                What does this do?
-                <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" style={{ transform: explOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.15s' }}><polyline points="6 9 12 15 18 9"/></svg>
-              </button>
-            )}
-            {showExpand && (
-              <button className={s('code-btn')} aria-label="Expand">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M15 3h6v6"/><path d="M9 21H3v-6"/><path d="M21 3l-7 7"/><path d="M3 21l7-7"/></svg>
-              </button>
-            )}
-            {showNewTab && (
-              <button className={s('code-btn')} aria-label="Open in new tab">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
-              </button>
-            )}
-            <button
-              className={s('code-btn')}
-              aria-label="Copy"
-              onClick={() => copyCode(copyKey, copyText)}
-            >
-              {copied[copyKey]
-                ? <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
-                : <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-              }
-            </button>
-          </div>
-        </div>
-        {explanation && explOpen && (
-          <div className={s('code-expl-strip')}>{explanation}</div>
-        )}
-        {showHint && !panelOpen && (
-          <div className={s('code-hint')}>Click any line to see what it does.</div>
-        )}
-        {lines ? (
-          <div className={cx(s('code-body'), panelOpen && s('code-body-open'))}>
-            <div className={s('code-lines')}>
-              {lines.map((lineHtml, i) => (
-                <div
-                  key={i}
-                  className={cx(
-                    s('code-line'),
-                    selLine === i && s('code-line-sel'),
-                    panelOpen && selLine !== i && s('code-line-dim'),
-                  )}
-                  onClick={() => setSelLine(prev => prev === i ? null : i)}
-                  role="button"
-                  tabIndex={0}
-                  aria-pressed={selLine === i}
-                  aria-label={`Line ${i + 1}${lineAnnotations?.[i] ? ': ' + lineAnnotations[i] : ''}`}
-                  onKeyDown={e => {
-                    if (e.key === 'Enter' || e.key === ' ') {
-                      e.preventDefault()
-                      setSelLine(prev => prev === i ? null : i)
-                    }
-                  }}
-                  dangerouslySetInnerHTML={{ __html: lineHtml || ' ' }}
-                />
-              ))}
-            </div>
-            <div
-              className={cx(s('code-annot'), panelOpen && s('code-annot-open'))}
-              aria-live="polite"
-              aria-label="Line explanation"
-            >
-              <div className={s('code-annot-in')}>
-                {panelOpen && (
-                  <>
-                    <div className={s('code-annot-lbl')}>line {(selLine ?? 0) + 1}</div>
-                    <div className={s('code-annot-txt')}>
-                      {annotText || <span className={s('code-annot-empty')}>No annotation for this line.</span>}
-                    </div>
-                  </>
-                )}
-              </div>
-            </div>
-          </div>
-        ) : (
-          <div className={s('code-bd')} dangerouslySetInnerHTML={{ __html: html }} />
-        )}
-      </div>
-    )
+    try { rec.start(); setRecording(id) }
+    catch { setVoiceError('Voice input could not start. You can type your reflection instead.') }
   }
 
   const progressPct = SECTION_PROGRESS[activeSection] ?? 10
 
   return (
     <div className={cx(styles.root, baskerville.variable, dmMono.variable)}>
-      <TopBar progress={progressPct} onDoc={() => setDocOpen(true)} />
+      <TopBar progress={progressPct} />
+      {voiceError && <p role="status" aria-live="polite">{voiceError}</p>}
       <WorkPanel open={workPanelOpen} onClose={() => setWorkPanelOpen(false)} reflections={reflections} saved={saved} />
       <a href="#main" className={s('skip')}>Skip to main content</a>
 
@@ -830,9 +685,9 @@ export default function ProjectPage() {
 
                 <div className={s('cl')} role="group" aria-label="Step checklist">
                   <div className={s('cl-lbl')}>In this step, get ready to:</div>
-                  <CheckItem id="s1-0">Scaffold a Next.js project with TypeScript and Tailwind.</CheckItem>
-                  <CheckItem id="s1-1">Install the Groq-compatible SDK and configure your API key.</CheckItem>
-                  <CheckItem id="s1-2">Start the development server and confirm everything works.</CheckItem>
+                  <CheckItem checked={checks["s1-0"] ?? false} onToggle={toggleCheck} id="s1-0">Scaffold a Next.js project with TypeScript and Tailwind.</CheckItem>
+                  <CheckItem checked={checks["s1-1"] ?? false} onToggle={toggleCheck} id="s1-1">Install the Groq-compatible SDK and configure your API key.</CheckItem>
+                  <CheckItem checked={checks["s1-2"] ?? false} onToggle={toggleCheck} id="s1-2">Start the development server and confirm everything works.</CheckItem>
                 </div>
 
                 <TaskBlock
@@ -870,13 +725,13 @@ export default function ProjectPage() {
                   </ul>
                 </div>
 
-                <CodeBlock lang="bash" copyKey="cd" copyText="cd ~/Desktop" html={CODE_CD} />
+                <CodeBlock copied={copied["cd"] ?? false} onCopy={copyCode} lang="bash" copyKey="cd" copyText="cd ~/Desktop" html={CODE_CD} />
 
                 <div className={cx(s('prose'), s('mt-16'))}>
                   <ul><li>Create your project by running this command:</li></ul>
                 </div>
 
-                <CodeBlock
+                <CodeBlock copied={copied["npx"] ?? false} onCopy={copyCode}
                   lang="bash"
                   copyKey="npx"
                   copyText="npx create-next-app@latest design-interview-coach --yes"
@@ -895,7 +750,7 @@ export default function ProjectPage() {
 
                 <div className={s('sub-h')}>Configure your layout file</div>
 
-                <CodeBlock
+                <CodeBlock copied={copied["layout"] ?? false} onCopy={copyCode}
                   file="app/layout.tsx"
                   lang="typescript"
                   copyKey="layout"
@@ -984,9 +839,9 @@ export default function ProjectPage() {
 
                 <div className={s('cl')} role="group" aria-label="Step checklist">
                   <div className={s('cl-lbl')}>In this step, get ready to:</div>
-                  <CheckItem id="s2-0">Prompt Cursor to replace the default page with a JD input form.</CheckItem>
-                  <CheckItem id="s2-1">Review the generated code for correct state management.</CheckItem>
-                  <CheckItem id="s2-2">Add a loading spinner for processing feedback.</CheckItem>
+                  <CheckItem checked={checks["s2-0"] ?? false} onToggle={toggleCheck} id="s2-0">Prompt Cursor to replace the default page with a JD input form.</CheckItem>
+                  <CheckItem checked={checks["s2-1"] ?? false} onToggle={toggleCheck} id="s2-1">Review the generated code for correct state management.</CheckItem>
+                  <CheckItem checked={checks["s2-2"] ?? false} onToggle={toggleCheck} id="s2-2">Add a loading spinner for processing feedback.</CheckItem>
                 </div>
 
                 <TaskBlock
@@ -1394,7 +1249,7 @@ export default function ProjectPage() {
                     }
                     {uploadedImages['ss1'] && (
                       <div className={s('dp-bc-img-wrap')}>
-                        <img src={uploadedImages['ss1'].url} alt={uploadedImages['ss1'].name} className={s('dp-bc-img')} />
+                        <Image width={1200} height={800} src={uploadedImages['ss1'].url} alt={uploadedImages['ss1'].name} className={s('dp-bc-img')} />
                       </div>
                     )}
                     <div className={s('dp-bc-tags')}>
@@ -1414,7 +1269,7 @@ export default function ProjectPage() {
                     }
                     {uploadedImages['ss2'] && (
                       <div className={s('dp-bc-img-wrap')}>
-                        <img src={uploadedImages['ss2'].url} alt={uploadedImages['ss2'].name} className={s('dp-bc-img')} />
+                        <Image width={1200} height={800} src={uploadedImages['ss2'].url} alt={uploadedImages['ss2'].name} className={s('dp-bc-img')} />
                       </div>
                     )}
                     <div className={s('dp-bc-tags')}>

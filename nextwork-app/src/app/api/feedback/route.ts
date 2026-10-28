@@ -1,22 +1,11 @@
-import Groq from 'groq-sdk'
-
-const groq = new Groq({ apiKey: process.env.GROQ_API_KEY })
+import { handleAI, field, complete, analysisFrom, outputObject, strings } from '../../../lib/ai-route'
 
 export async function POST(request: Request) {
-  const { question, answer, analysis } = await request.json()
-
-  if (!question || !answer || !analysis) {
-    return Response.json({ error: 'question, answer, and analysis are required' }, { status: 400 })
-  }
-
-  const completion = await groq.chat.completions.create({
-    model: 'llama-3.3-70b-versatile',
-    response_format: { type: 'json_object' },
-    temperature: 0.5,
-    messages: [
-      {
-        role: 'system',
-        content: `You are an expert product design interview coach. Evaluate candidate answers and give specific, actionable feedback.
+  return handleAI(request, async body => {
+    const question = field(body, 'question', 2000)
+    const answer = field(body, 'answer')
+    const analysis = analysisFrom(body.analysis)
+    const data = outputObject(await complete(`You are an expert product design interview coach. Evaluate candidate answers and give specific, actionable feedback.
 Return ONLY valid JSON:
 {
   "score": 7,
@@ -25,25 +14,12 @@ Return ONLY valid JSON:
   "rewrite": "One or two sentences showing how to open the answer more powerfully."
 }
 Score rubric: 9-10 = hire immediately, 7-8 = strong signal, 5-6 = potential with coaching, 3-4 = significant gaps, 1-2 = off-topic or missing.
-Be specific — reference the actual content of the answer in your feedback, not generic advice.`,
-      },
-      {
-        role: 'user',
-        content: `Evaluate this interview answer.
-
+Be specific — reference the actual content of the answer in your feedback, not generic advice.`, `Evaluate this interview answer.
 Role: ${analysis.role}${analysis.company ? ` at ${analysis.company}` : ''}
-What this team values: ${(analysis.values as string[]).join(', ')}
-
+What this team values: ${analysis.values.join(', ')}
 Interview question: ${question}
-
-Candidate's answer:
-${answer}
-
-Give a score, 2-3 specific strengths, 2-3 specific improvements, and rewrite the opening sentence to show how to start stronger.`,
-      },
-    ],
+Candidate answer: ${answer}`, 0.5, true))
+    if (typeof data.score !== 'number' || !Number.isInteger(data.score) || data.score < 1 || data.score > 10 || !strings(data.strengths) || !strings(data.improvements) || typeof data.rewrite !== 'string') throw new Error('Invalid AI response')
+    return { score: data.score, strengths: data.strengths, improvements: data.improvements, rewrite: data.rewrite }
   })
-
-  const data = JSON.parse(completion.choices[0].message.content!)
-  return Response.json(data)
 }
