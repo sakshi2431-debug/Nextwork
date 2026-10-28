@@ -1,36 +1,17 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Nextwork tutorial and reflection prototype
 
-## Getting Started
+This is a redesigned tutorial experience built with Next.js, React, and TypeScript. It includes step checklists, annotated code blocks, screenshots, and written or voice reflections.
 
-First, run the development server:
+## What works
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+The tutorial page calls **one AI endpoint**, `/api/rewrite`, to turn a voice transcript into a short narrative. Voice capture uses the browser's speech-recognition API where supported. If rewriting fails, the original transcript stays in the reflection field and a status message explains the failure.
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+`/api/analyze`, `/api/questions`, and `/api/feedback` are reference endpoints for the interview-coach tutorial. They are **not connected to a multi-step workflow in this interface**. All four handlers validate requests, bound request size, handle missing configuration, limit provider timeouts, and validate response shapes. No live provider call or production deployment is implied by local tests.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Run
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Use Node.js 22 or later. Install with `npm ci`, put a newly issued `GROQ_API_KEY` in an untracked `.env.local`, then run `npm run dev`. Never commit a key.
 
-## Learn More
+`npm run lint`, `npm run typecheck`, `npm test`, and `npm run build` check the project. Tests mock the provider; they do not spend API credits or send personal transcripts externally. Google font downloads may require network access during builds.
 
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+This remains a prototype. A public production deployment also needs provider-side quotas and appropriate abuse/rate controls; the validation added here is not authentication or rate limiting.
